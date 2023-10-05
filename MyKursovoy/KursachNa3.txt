@@ -1,0 +1,458 @@
+import graphics as gr
+import math
+import numpy as np
+
+ZT2 = 6
+ZT4 = 8
+N = 6
+x = 0.0
+lines = []
+y = 1.0
+
+y1 = 1.0
+
+eps = 10 ** (-6)
+
+step = 0.1
+
+y_copy = 1.0
+
+y1_copy = 1.0
+
+step_copy = step
+
+mas_x = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+mas_y = [1, 0, 0, 0, 0, 0]
+
+
+def func(x_new, y_new, y1_new):
+    Answer = (math.exp(x_new) + y_new + y1_new) / 3.0
+    return Answer
+
+
+def K_Calculator(step_func, x_func, y_func, y1_func, k):
+    temp = x_func
+    if (k == 1):
+        temp = x_func
+    if (k == 2 or k == 3):
+        temp = x_func + step_func / 2.0
+    if (k == 4):
+        temp = x_func + step_func
+    Answer1 = y1_func
+    Answer2 = func(temp, y_func, y1_func)
+    return Answer1, Answer2
+
+
+def Temp_Y(step_func, y_func, y1_func, k_func, k1_func, k):
+    temp = step_func
+    if (k == 1 or k == 2):
+        temp = step_func / 2.0
+    Answer1 = temp * k_func + y_func
+    Answer2 = temp * k1_func + y1_func
+    return Answer1, Answer2
+
+
+def Full_Calculate(step_func, y_func, y1_func, k1y_func,
+                   k1y1_func, k2y_func, k2y1_func, k3y_func, k3y1_func,
+                   k4y_func, k4y1_func):
+    StepMulti = step_func / 6.0
+    Answer1 = StepMulti * (k1y_func + 2.0 * (k2y_func) + 2.0 * (k3y_func) + k4y_func) + y_func
+    Answer2 = StepMulti * (k1y1_func + 2.0 * (k2y1_func) + 2.0 * (k3y1_func) + k4y1_func) + y1_func
+    return Answer1, Answer2
+
+
+def Runge_Cutt_Y(x_func, y_func, y1_func, newstep, y_old):
+    y = newstep * y1_func + y_old
+    return y
+
+
+def Runge_Cutt_Y1(x_func, y_func, y1_func, newstep, y_old):
+    y1 = newstep * func(x_func, y_func, y1_func) + y_old
+    return y1
+
+
+def mas_y_fill(x, y):
+    if (x == 0.2):
+        mas_y[1] = y
+    elif (x == 0.4):
+        mas_y[2] = y
+    elif (x == 0.6):
+        mas_y[3] = y
+    elif (x == 0.8):
+        mas_y[4] = y
+    elif (x == 1.0):
+        mas_y[5] = y
+
+
+def p(x, n, x_arr, y_arr):
+    n = len(x_arr)
+    h = np.diff(x_arr)
+    d = np.diff(y_arr) / h
+    C = np.zeros((n, n))
+    C[0, 0] = 1
+    C[-1, -1] = 1
+
+    for i in range(1, n - 1):
+        C[i, i - 1] = h[i - 1] / 6
+        C[i, i] = (h[i - 1] + h[i]) / 3
+        C[i, i + 1] = h[i] / 6
+
+    D = np.zeros((n, 1))
+    D[1:-1, 0] = d[1:] - d[:-1]
+
+    M = np.linalg.solve(C, D)
+    x_arr2 = x_arr[:N - 1]
+    i = np.searchsorted(x_arr2, x) - 1
+    h_i = x_arr[i + 1] - x_arr[i]
+
+    term1 = (M[i] * (x_arr[i + 1] - x) ** 3) / (6 * h_i)
+    term2 = (M[i + 1] * (x - x_arr[i]) ** 3) / (6 * h_i)
+    term3 = ((y_arr[i] - (M[i] * h_i ** 2) / 6) * (x_arr[i + 1] - x) / h_i)
+    term4 = ((y_arr[i + 1] - (M[i + 1] * h_i ** 2) / 6) * (x - x_arr[i]) / h_i)
+
+    return term1 + term2 + term3 + term4
+
+
+def dots(n, yq):
+    for i in range(0, n):
+        t = gr.Circle(gr.Point(100 + (20 * i), 500 - (yq[i] * 100)), 2)
+        t.setFill("yellow")
+        lines.append(t)
+
+
+def rc2():
+    x = 0.0
+
+    y = 1.0
+
+    y1 = 1.0
+
+    eps = 10 ** (-6)
+
+    step = 0.1
+
+    y_copy = 1.0
+
+    y1_copy = 1.0
+
+    step_copy = step
+
+    print("", x, "               ", y, "                           ", y1)
+
+    number_of_step = 0.0
+
+    left_int = 0.0
+    right_int = 1.0
+    eps_need = eps * 3.0
+    eps_now = 1.0
+
+    second_step = step / 2.0
+
+    y_first = y
+    y_second = y
+    y1_first = y1
+    y1_second = y1
+
+    steps_all = 0
+
+    while (eps_now > eps_need):
+        y_first = y
+        y1_first = y1
+        while (x < right_int):
+            y_copy = Runge_Cutt_Y(x, y_first, y1_first, step / 2.0, y_first)
+            y1_copy = Runge_Cutt_Y1(x, y_first, y1_first, step / 2.0, y1_first)
+            x += step / 2.0
+            number_of_step += 0.5
+            temp = Runge_Cutt_Y(x, y_copy, y1_copy, step, y_first)
+            temp1 = Runge_Cutt_Y1(x, y_copy, y1_copy, step, y1_first)
+            x += step / 2.0
+            y_first = temp
+            y1_first = temp1
+            mas_y_fill(x, y_first)
+            print("%1.2f" % x, "                %1.8f " % y_first, "                    %1.8f  " % y1_first)
+        x = 0.0
+        y_second = y
+        y1_second = y1
+        while (x < right_int):
+            y_copy = Runge_Cutt_Y(x, y_second, y1_second, second_step / 2.0, y_second)
+            y1_copy = Runge_Cutt_Y1(x, y_second, y1_second, second_step / 2.0, y1_second)
+            x += second_step / 2.0
+            temp = Runge_Cutt_Y(x, y_copy, y1_copy, second_step, y_second)
+            temp1 = Runge_Cutt_Y1(x, y_copy, y1_copy, second_step, y1_second)
+            x += second_step / 2.0
+            y_second = temp
+            y1_second = temp1
+            print(f'{x:.8}', "                %1.8f " % y_second, "                    %1.8f  " % y1_second)
+        eps_now = abs(y_first - y_second)
+
+        step = step / 2.0
+        second_step = second_step / 2.0
+        steps_all += 1
+        x = 0.0
+
+    x = 0.0
+    step = step_copy
+    for i in range(0, 10):
+        number_of_step += 0.5
+        y_copy = Runge_Cutt_Y(x, y, y1, step / 2.0, y)
+        y1_copy = Runge_Cutt_Y1(x, y, y1, step / 2.0, y1)
+        x += step / 2.0
+
+        number_of_step += 0.5
+        temp = Runge_Cutt_Y(x, y_copy, y1_copy, step, y)
+        temp1 = Runge_Cutt_Y1(x, y_copy, y1_copy, step, y1)
+        x += step / 2.0
+        y = temp
+        y1 = temp1
+
+    x = 0.0
+    step_tochno_nuzniy = step
+    step = step_copy / 2.0
+    y = 1.0
+    y1 = 1.0
+    mas_y[0] = y
+
+    arr_x = []
+    arr_y = []
+    arr_ys = []
+    for i in range(0, 20):
+        number_of_step += 0.5
+        y_copy = Runge_Cutt_Y(x, y, y1, step / 2.0, y)
+        y1_copy = Runge_Cutt_Y1(x, y, y1, step / 2.0, y1)
+        x += step / 2.0
+        number_of_step += 0.5
+        temp = Runge_Cutt_Y(x, y_copy, y1_copy, step, y)
+        temp1 = Runge_Cutt_Y1(x, y_copy, y1_copy, step, y1)
+        x += step / 2.0
+        y = temp
+        y1 = temp1
+        if i == 3:
+            mas_y[1] = y
+        if i == 7:
+            mas_y[2] = y
+        if i == 11:
+            mas_y[3] = y
+        if i == 15:
+            mas_y[4] = y
+        if i == 19:
+            mas_y[5] = y
+        arr_x.append(x)
+        arr_y.append(y)
+        arr_ys.append(y1)
+
+    print("y:", y_first)
+    print("Шагов: ", steps_all)
+    print("Eps: ", eps_now)
+
+    x = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    y = [mas_y[0], mas_y[1], mas_y[2], mas_y[3], mas_y[4], mas_y[5]]
+    for i in range(0, 20):
+        print('{:^15}'.format(round(arr_x[i], ZT2)), '{:^15}'.format(round(arr_y[i], ZT2)),
+              '{:^15}'.format(round(arr_ys[i], ZT2)), '{:^15}'.format(round(p((i + 1) * 0.05, N, x, y)[0], ZT2)))
+
+    # window = gr.GraphWin("Курсовая работа", 600, 600)
+
+    lines.append(gr.Line(gr.Point(100, 0), gr.Point(100, 600)))
+    lines.append(gr.Line(gr.Point(0, 500), gr.Point(600, 500)))
+
+    for i in range(0, 20):
+        lines.append(gr.Line(gr.Point(80, 25 * i), gr.Point(120, 25 * i)))
+        lines.append(gr.Line(gr.Point(100 + 25 * i, 480), gr.Point(100 + 25 * i, 520)))
+        lines.append(gr.Text(gr.Point(60, 25 + 25 * i), (19 - i) / 4))
+        if (i % 2 == 0):
+            lines.append(gr.Text(gr.Point(100 + 25 * i, 540), (i) / 4))
+        else:
+            lines.append(gr.Text(gr.Point(100 + 25 * i, 560), (i) / 4))
+
+    h = 0.5
+    Del = 100
+    M = 0
+    # dots(N, y)
+    # print(y, x)
+    # for i in range(0, int(600)):
+    #     t = gr.Line(gr.Point(100+(i), 500-p(i/Del,  N, x, y)*100), gr.Point(100+((i+1)), 500-p((i+1)/Del,  N, x, y)*100))
+    #     t.setOutline('blue')
+    #     lines.append(t)
+
+    # for q in lines:
+    #     q.draw(window)
+
+    # window.getMouse()
+    # window.close()
+    return ([step_copy, steps_all, ZT2])
+
+
+def rc4():
+    x = 0.0
+
+    y = 1.0
+
+    y1 = 1.0
+
+    step = 0.1
+
+    eps = 10 ** (-8)
+
+    to_points = 0
+    mas_y = []
+    mas_y.append(y)
+    k1_y = 0.0
+    k1_y1 = 0.0
+    y0_temp1_y = 0.0
+    y0_temp1_y1 = 0.0
+    k2_y = 0.0
+    k2_y1 = 0.0
+    y0_temp2_y = 0.0
+    y0_temp2_y1 = 0.0
+    k3_y = 0.0
+    k3_y1 = 0.0
+    y0_temp3_y = 0.0
+    y0_temp3_y1 = 0.0
+    k4_y = 0.0
+    k4_y1 = 0.0
+    eps_need = 15.0 * eps
+    eps_now = 1.0
+
+    x_first = x
+    y_first = y
+    y1_first = y1
+    x_second = x
+    y_second = y
+    y1_second = y1
+    print()
+    print("  x                     y                              y'")
+    print("", x, "               ", y, "                           ", y1)
+    i = 0
+    step_first = step
+    step_second = step / 2.0
+    left_int = 0.0
+    right_int = 1.0
+    ch = 0
+    flag = True
+    for_first = 10
+    for_second = 20
+
+    arr_x = []
+    arr_y = []
+    arr_ys = []
+
+    while (eps_now > eps_need):
+        x_first = x
+        y_first = y
+        y1_first = y1
+        x_second = x
+        y_second = y
+        y1_second = y1
+        qwerty = 0
+        ytrewq = 0
+        while (qwerty < for_first):
+            k1_y, k1_y1 = K_Calculator(step_first, x_first, y_first, y1_first, 1)
+            y0_temp1_y, y0_temp1_y1 = Temp_Y(step_first, y_first, y1_first, k1_y, k1_y1, 1)
+            k2_y, k2_y1 = K_Calculator(step_first, x_first, y0_temp1_y, y0_temp1_y1, 2)
+            y0_temp2_y, y0_temp2_y1 = Temp_Y(step_first, y_first, y1_first, k2_y, k2_y1, 2)
+            k3_y, k3_y1 = K_Calculator(step_first, x_first, y0_temp2_y, y0_temp2_y1, 3)
+            y0_temp3_y, y0_temp3_y1 = Temp_Y(step_first, y_first, y1_first, k3_y, k3_y1, 3)
+            k4_y, k4_y1 = K_Calculator(step_first, x_first, y0_temp3_y, y0_temp3_y1, 4)
+            Answer1, Answer2 = Full_Calculate(
+                step_first, y_first, y1_first, k1_y, k1_y1, k2_y, k2_y1, k3_y, k3_y1, k4_y, k4_y1)
+            y_first = Answer1
+            y1_first = Answer2
+            x_first += step_first
+            print("%1.2f" % x_first, "                %1.8f " % y_first, "                    %1.8f  " % y1_first)
+            qwerty += 1
+        x_second = x
+        for_first *= 2
+        if (flag):
+            print("  x                     y                              y'")
+            print("", x, "               ", y, "                           ", y1)
+        while (ytrewq < for_second):
+            k1_y, k1_y1 = K_Calculator(step_second, x_second, y_second, y1_second, 1)
+            y0_temp1_y, y0_temp1_y1 = Temp_Y(step_second, y_second, y1_second, k1_y, k1_y1, 1)
+            k2_y, k2_y1 = K_Calculator(step_second, x_second, y0_temp1_y, y0_temp1_y1, 2)
+            y0_temp2_y, y0_temp2_y1 = Temp_Y(step_second, y_second, y1_second, k2_y, k2_y1, 2)
+            k3_y, k3_y1 = K_Calculator(step_second, x_second, y0_temp2_y, y0_temp2_y1, 3)
+            y0_temp3_y, y0_temp3_y1 = Temp_Y(step_second, y_second, y1_second, k3_y, k3_y1, 3)
+            k4_y, k4_y1 = K_Calculator(step_second, x_second, y0_temp3_y, y0_temp3_y1, 4)
+            Answer1, Answer2 = Full_Calculate(
+                step_second, y_second, y1_second, k1_y, k1_y1, k2_y, k2_y1, k3_y, k3_y1, k4_y, k4_y1)
+            y_second = Answer1
+            y1_second = Answer2
+            x_second += step_second
+            ytrewq += 1
+            print("%1.2f" % x_second, "                %1.8f " % y_second, "                    %1.8f  " % y1_second)
+            arr_x.append(x_second)
+            arr_y.append(y_second)
+            arr_ys.append(y1_second)
+
+            if (flag):
+
+                if ytrewq == 4:
+                    mas_y.append(y_second)
+                if ytrewq == 8:
+                    mas_y.append(y_second)
+                if ytrewq == 12:
+                    mas_y.append(y_second)
+                if ytrewq == 16:
+                    mas_y.append(y_second)
+                if ytrewq == 20:
+                    mas_y.append(y_second)
+        flag = False
+        step_first = step_first / 2.0
+        for_second *= 2
+        step_second = step_second / 2.0
+        eps_now = abs(y_second - y_first)
+        ch += 1
+
+    print("Шаги:", ch)
+    print("Ответ:", y_second)
+    print("Текущая точность:", eps_now)
+
+    x = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    y = [mas_y[0], mas_y[1], mas_y[2], mas_y[3], mas_y[4], mas_y[5]]
+    for i in range(0, 20):
+         print('{:^8}'.format(round(arr_x[i], ZT4)), '{:^8}'.format(round(arr_y[i], ZT4)),
+              '{:^8}'.format(round(arr_ys[i], ZT4)), '{:^8}'.format(round(p((i + 1) * 0.05, N, x, y)[0], ZT4)))
+
+    # window = gr.GraphWin("Курсовая работа", 600, 600)
+
+    lines.append(gr.Line(gr.Point(100, 0), gr.Point(100, 600)))
+    lines.append(gr.Line(gr.Point(0, 500), gr.Point(600, 500)))
+
+    for i in range(0, 20):
+        lines.append(gr.Line(gr.Point(80, 25 * i), gr.Point(120, 25 * i)))
+        lines.append(gr.Line(gr.Point(100 + 25 * i, 480), gr.Point(100 + 25 * i, 520)))
+        lines.append(gr.Text(gr.Point(60, 25 + 25 * i), (19 - i) / 4))
+        if (i % 2 == 0):
+            lines.append(gr.Text(gr.Point(100 + 25 * i, 540), (i) / 4))
+        else:
+            lines.append(gr.Text(gr.Point(100 + 25 * i, 560), (i) / 4))
+
+    h = 0.5
+    Del = 100
+    M = 0
+    dots(N, y)
+    # for i in range(0, int(600)):
+    #     t = gr.Line(gr.Point(100+(i), 500-p(i/Del,  N, x, y)*100), gr.Point(100+((i+1)), 500-p((i+1)/Del,  N, x, y)*100))
+    #     t.setOutline('blue')
+    #     lines.append(t)
+
+    # for q in lines:
+    #     q.draw(window)
+
+    # window.getMouse()
+    # window.close()
+    return ([step_copy, ch, ZT4])
+
+
+# T = int(input())
+# if(T==1):
+#     rc2()
+# else:
+#     rc4()
+
+a = rc2()
+b = rc4()
+
+print("шаг:   число шагов:    точность:")
+print('{:^10}'.format(a[0] / 2 ** a[1]), '{:^10}'.format(a[1]), '{:^10}'.format(a[2]))
+print('{:^10}'.format(b[0] / 2 ** b[1]), '{:^10}'.format(b[1]), '{:^10}'.format(b[2]))

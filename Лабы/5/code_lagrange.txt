@@ -1,0 +1,77 @@
+import graphics as gr
+import math as m
+#window = gr.GraphWin("Lagrange", 600, 600)
+
+step = 0.4
+H = 1 / step
+number_points = 2
+x0 = 1
+
+lines = []
+
+def search_points(number_points: int):
+    for i in range(number_points):
+        point = gr.Circle(gr.Point(100+(x0*100)+(40*i*2.5/H), 500-(yq[i]*100)), 3)
+        point.setFill("red")
+        lines.append(point)
+
+
+xq = []
+yq = []
+
+def y(x):
+    return m.sqrt(x)
+
+for i in range(0, 100):
+    xq.append(x0 + i / H)
+    yq.append(y(x0 + i / H))
+
+
+print(xq)
+"""def p(xd, n):
+    q = 0
+    for i in range(0, n+1):
+        a = 1
+        b = 1
+        for w in range(0, n+1):
+            if(w!=i):
+                a = a*(xd-xq[w])
+                b = b*(xq[i]-xq[w])
+        q = q + yq[i]*(a/b)
+
+    return q
+
+lines = []
+
+lines.append(gr.Line(gr.Point(100, 0), gr.Point(100, 600)))
+lines.append(gr.Line(gr.Point(0, 500), gr.Point(600, 500)))
+
+
+for i in range(0, 20):
+    lines.append(gr.Line(gr.Point(80, 25*i), gr.Point(120, 25*i)))
+    lines.append(gr.Line(gr.Point(100+25*i, 480), gr.Point(100+25*i, 520)))
+    lines.append(gr.Text(gr.Point(60, 25+25*i), (19-i)/4))
+    if(i%2==0):
+        lines.append(gr.Text(gr.Point(100+25*i, 540), (i)/4))
+    else:
+        lines.append(gr.Text(gr.Point(100+25*i, 560), (i)/4))
+
+search_points(number_points)
+
+for i in range(0, 1000):
+    w = gr.Line(gr.Point(100+(i), 500-y(i/100)*100), gr.Point(100+((i+1)), 500-y((i+1)/100)*100))
+    w.setOutline('yellow')
+    lines.append(w)
+    t = gr.Line(gr.Point(100+(i), 500-p(i/100, number_points)*100), gr.Point(100+((i+1)), 500-p((i+1)/100, number_points)*100))
+    t.setOutline('black')
+    lines.append(t)
+
+
+
+
+for q in lines:
+    q.draw(window)
+
+
+window.getMouse()
+window.close()"""

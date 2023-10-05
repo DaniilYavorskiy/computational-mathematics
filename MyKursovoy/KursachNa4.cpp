@@ -1,0 +1,163 @@
+﻿#include <iostream>
+#include <vector>
+#include <math.h>
+
+using namespace std;
+
+
+
+double funk(double x, double y, double yi) {
+	return (exp(x) + yi);
+}
+
+double u_cal(double u, int n) {
+	double temp = u;
+	for (int i = 1; i < n; i++) temp *= (u + i);//q*(q+1)*...*(q+m-1)
+	return temp;
+}
+
+double u_cal2(double u, int n) { //1 formula
+	double temp = u;
+	for (int i = 1; i < n; i++) temp *= (u - i);//q*(q-1)*...*(q-n+1)
+	return temp;
+}
+
+double fact(int n) {
+	double f = 1.;
+	for (int i = 2; i <= n; i++) f *= i;//формула для факториала
+	return f;
+}
+
+double inter(int n, double x, vector<pair<double, pair<double, double>>> XnY) {
+
+	double** y = new double* [n];
+
+	for (int i = 0; i < n; i++) {
+		y[i] = new double[n];
+	}
+
+	for (int i = 0; i < n; i++) y[i][0] = XnY.at(i).second.second;
+	for (int i = 1; i < n; i++) {
+		for (int j = 0; j < n - i; j++) y[j][i] = y[j + 1][i - 1] - y[j][i - 1];
+	}
+
+	double sum = y[0][0];
+	double u = (x - XnY.at(0).first) / (XnY.at(1).first - XnY.at(0).first);//вычисление q
+
+	for (int i = 1; i < n; i++) {
+		sum += (u_cal2(u, i) * y[0][i]) / fact(i); //основная формула 
+	}
+
+	return sum;
+}
+
+
+vector<pair<double, pair<double, double>>> Runge_Kutt_4(double a, double b, double y0, double yb, double e, double *h1) {
+
+	vector<pair<double, pair<double, double>>> XnY;
+	XnY.push_back(make_pair(a, make_pair(y0, yb)));
+	int index = 0;
+	double h = *h1;
+	double y;
+	double yl;
+	double yI;
+
+	while (powf(h, 4) > e) {
+		h /= 2;
+	}
+
+	*h1 = h;
+
+	double** K = new double* [4];
+	for (int i = 0; i < 4; i++) {
+		K[i] = new double[2];
+	}
+
+	for (auto i = a + h; i < b ; i += h) {
+
+		K[0][0] = XnY.at(index).second.second;
+		K[0][1] = funk(XnY.at(index).first, XnY.at(index).second.first, XnY.at(index).second.second);
+		y = XnY.at(index).second.first + K[0][0] * h / 2;
+		yI = XnY.at(index).second.second + K[0][1] * h / 2;
+		K[1][0] = yI;
+		K[1][1] = funk(XnY.at(index).first + h / 2, y, yI);
+		y = XnY.at(index).second.first + K[1][0] * h / 2;
+		yI = XnY.at(index).second.second + K[1][1] * h / 2;
+		K[2][0] = yI;
+		K[2][1] = funk(XnY.at(index).first + h / 2, y, yI);
+		y = XnY.at(index).second.first + K[2][0] * h;
+		yI = XnY.at(index).second.second + K[2][1] * h;
+		K[3][0] = yI;
+		K[3][1] = funk(XnY.at(index).first + h, y, yI);
+
+		y = XnY.at(index).second.first + h * (K[0][0] + 2 * K[1][0] + 2 * K[2][0] + K[3][0]) / 6;
+		yI = XnY.at(index).second.second + h * (K[0][1] + 2 * K[1][1] + 2 * K[2][1] + K[3][1]) / 6;
+
+		XnY.push_back(make_pair(i, make_pair(y, yI)));
+		index++;
+	}
+
+	while (abs(XnY.back().second.first - yb) > e) {
+
+		yl = XnY.at(0).second.second;
+		yl -= (XnY.back().second.first - yb) / 2;
+		XnY.clear();
+		XnY.push_back(make_pair(a, make_pair(y0, yl)));
+		index = 0;
+
+		for (auto i = a + h; i < b ; i += h) {
+
+			K[0][0] = XnY.at(index).second.second;
+			K[0][1] = funk(XnY.at(index).first, XnY.at(index).second.first, XnY.at(index).second.second);
+			y = XnY.at(index).second.first + K[0][0] * h / 2;
+			yI = XnY.at(index).second.second + K[0][1] * h / 2;
+			K[1][0] = yI;
+			K[1][1] = funk(XnY.at(index).first + h / 2, y, yI);
+			y = XnY.at(index).second.first + K[1][0] * h / 2;
+			yI = XnY.at(index).second.second + K[1][1] * h / 2;
+			K[2][0] = yI;
+			K[2][1] = funk(XnY.at(index).first + h / 2, y, yI);
+			y = XnY.at(index).second.first + K[2][0] * h;
+			yI = XnY.at(index).second.second + K[2][1] * h;
+			K[3][0] = yI;
+			K[3][1] = funk(XnY.at(index).first + h, y, yI);
+
+			y = XnY.at(index).second.first + h * (K[0][0] + 2 * K[1][0] + 2 * K[2][0] + K[3][0]) / 6;
+			yI = XnY.at(index).second.second + h * (K[0][1] + 2 * K[1][1] + 2 * K[2][1] + K[3][1]) / 6;
+
+			XnY.push_back(make_pair(i, make_pair(y, yI)));
+			index++;
+		}
+	} 
+	cout << endl;
+	cout << " 			| " << XnY.back().second.first<<"|"<<endl;
+
+	return XnY;
+}
+
+int main()
+{
+	vector<pair<double, pair<double, double>>> answerF;
+
+	double x0 = 0;
+	double xN = 1;
+	double y0 = 0;
+	double h = 0.1;
+	double e = 0.00000001;
+
+	answerF = Runge_Kutt_4(x0, xN, y0, 2.7181828, e, &h);
+
+	cout.precision(9);
+
+	cout << "		| Rungey-Kutt 4 poryadka |" << endl;
+	for (int i = 0; i < (int)answerF.size(); i++) {
+		cout << "x: " << answerF.at(i).first << "		| y: " << answerF.at(i).second.first << "		| y': " << answerF.at(i).second.second << endl;
+	}
+	cout << endl;
+	cout << "step: " << h;
+	//cout << "|  result of interpolation  y':" << inter(answerF.size(), 0.5, answerF);
+
+	answerF.clear();
+
+	return 0;
+}
